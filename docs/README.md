@@ -3,6 +3,7 @@
 | document | contents |
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | full component walkthrough: physics, perception, estimation, control, learning, safety, swarm |
+| [CLI.md](CLI.md) | complete command-line reference: every `drone`/`swarm` subcommand, flag, and named preset |
 | [RESULTS.md](RESULTS.md) | consolidated, honest results and findings — including negative results and limitations |
 | [BENCHMARK.md](BENCHMARK.md) | reproducible controller × scenario × disturbance matrix (script-produced) |
 | [SWARM.md](SWARM.md) | swarm coordination: sensing, consensus, CBF safety, GNN policy, cooperative perception |

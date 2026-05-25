@@ -152,7 +152,9 @@ drone watch ship             # live MuJoCo 3-D viewer
 
 ## Command-line interface
 
-Two polished entry points: **`drone`** (single-drone) and **`swarm`** (multi-drone). `run`/`parallel` are headless metric evaluations; `watch` opens an interactive MuJoCo window.
+Two polished entry points: **`drone`** (single-drone) and **`swarm`** (multi-drone). `run`/`parallel` are headless metric evaluations; `watch` opens an interactive MuJoCo window. Run `drone list` / `drone info` / `swarm info` for the live capability summary.
+
+> **Full reference:** every subcommand, flag, and named preset is documented in **[`docs/CLI.md`](docs/CLI.md)**. The most-used commands:
 
 ```bash
 drone run --scenario ground --controller mpc --episodes 20
@@ -246,6 +248,7 @@ docs/                       # results, architecture, swarm, safety, research not
 |---|---|
 | [`docs/RESULTS.md`](docs/RESULTS.md) | consolidated, honest results and findings (incl. negative results) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | full component walkthrough of the stack |
+| [`docs/CLI.md`](docs/CLI.md) | complete command-line reference (every subcommand, flag, and preset) |
 | [`docs/BENCHMARK.md`](docs/BENCHMARK.md) | reproducible controller × scenario × disturbance matrix |
 | [`docs/SWARM.md`](docs/SWARM.md) | swarm coordination, consensus, safety, GNN, cooperative perception |
 | [`docs/SAFETY.md`](docs/SAFETY.md) | reachability shield, CBF avoidance, contingency FSM |
