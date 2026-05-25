@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software or its findings, please cite it as below."
+title: "Drone Landing on a Moving Platform: a vision-based autonomous quadrotor recovery stack"
+abstract: >-
+  A research-grade simulation stack for autonomous quadrotor landing on moving
+  platforms (ground rovers and 6-DOF seakeeping ship decks), flying on onboard
+  sensors only (no ground truth in the loop). Includes ArUco perception with a
+  relative-state Kalman filter, a landing-supervisor finite-state machine,
+  geometric / nonlinear-MPC / image-based-visual-servoing control, residual
+  reinforcement learning, formal safety (Hamilton-Jacobi reachability and
+  control-barrier-function shields), maritime fidelity (wave spectra, RAOs, and
+  ship air-wake), and a separate decentralized multi-drone swarm module.
+type: software
+authors:
+  - family-names: Reddy
+    given-names: Manas
+version: "1.0.0"
+date-released: "2026-05-25"
+license: MIT
+keywords:
+  - autonomous-landing
+  - quadrotor
+  - moving-platform
+  - shipboard-recovery
+  - mujoco
+  - reinforcement-learning
+  - model-predictive-control
+  - control-barrier-functions
+  - reachability
+  - swarm-robotics
+  - cooperative-perception
+  - sim-to-real

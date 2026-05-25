@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drone-moving-platform-landing"
+version = "1.0.0"
+description = "Research-grade autonomous quadrotor landing on moving (ground & maritime) platforms."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Manas Reddy" }]
+keywords = [
+  "autonomous-landing", "quadrotor", "moving-platform", "shipboard-recovery",
+  "mujoco", "reinforcement-learning", "model-predictive-control",
+  "control-barrier-functions", "reachability", "swarm-robotics",
+  "cooperative-perception", "robotics", "sim-to-real",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+# Core runtime: physics + numerics needed by the simulation and model-based control.
+dependencies = [
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "mujoco>=3.1",
+  "pillow>=10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Manas-arumalla/drone-landing-moving-platform"
+Repository = "https://github.com/Manas-arumalla/drone-landing-moving-platform"
+Documentation = "https://github.com/Manas-arumalla/drone-landing-moving-platform/tree/main/docs"
+
+[project.scripts]
+# Unified simulation launcher. After `pip install -e .`: `drone list`, `drone run ship --sea rough`, ...
+drone = "drone_landing.cli:main"
+dl = "drone_landing.cli:main"
+drone-landing = "drone_landing.cli:main"
+# Separate launcher for the multi-drone swarm application (own module, own CLI).
+swarm = "drone_landing_swarm.cli:main"
+
+[project.optional-dependencies]
+# Perception: ArUco lives in opencv-contrib (cv2.aruco), not base opencv.
+vision = [
+  "opencv-contrib-python>=4.8",
+]
+# Model-based control: nonlinear MPC / trajectory optimization.
+mpc = [
+  "casadi>=3.6",
+]
+# Reinforcement learning. torch must be a CUDA build for GPU training.
+rl = [
+  "gymnasium>=0.29",
+  "stable-baselines3>=2.3",
+  "sb3-contrib>=2.3",
+  "torch>=2.2",
+  "tensorboard>=2.15",
+]
+# Visualization, demos, dashboards.
+viz = [
+  "matplotlib>=3.7",
+  "imageio>=2.31",
+  "imageio-ffmpeg>=0.4",
+]
+# Hyperparameter tuning and experiment tracking.
+tune = [
+  "optuna>=3.4",
+]
+track = [
+  "wandb>=0.16",
+]
+# Development tooling.
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "mypy>=1.8",
+  "pre-commit>=3.6",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

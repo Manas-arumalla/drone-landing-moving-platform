@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Run / training artifacts (renders, frames, logs, intermediate checkpoints)
+runs/
+outputs/
+wandb/
+tensorboard/
+lightning_logs/
+*.mp4
+
+# Large RL/training checkpoints are not committed by default.
+# Keeper policies referenced by the README/CLI can be force-added or attached as
+# release assets, e.g.:  git add -f runs/rl/ground/ppo_final.zip
+*.ckpt
+*.pth
+
+# Local scratch / third-party asset dumps (not part of this repo)
+Junk/
+mujoco_scanned_objects/
+mujoco_scanned_objects-main/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
