@@ -31,7 +31,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 - 🌊 **Real maritime fidelity** — 6-DOF seakeeping ship decks driven by **JONSWAP / Pierson–Moskowitz wave spectra + RAOs**, plus a ship **air-wake (burble)** turbulence field, the dominant real shipboard-landing disturbance.
 - 🧠 **Modern learning + classical guarantees side by side** — residual PPO (and recurrent LSTM-PPO) that *beats* a strong classical baseline on the hard regime, alongside **Hamilton–Jacobi reachability** and **control-barrier-function** safety shields with provable certificates.
 - 🐝 **A decentralized multi-drone swarm** (separate module) — N drones recovering onto K moving decks with consensus estimation, a non-bypassable CBF safety filter, a permutation-invariant GNN policy, and cooperative perception.
-- 🔬 **No cheating, and no hiding the failures** — the deployable stack uses only sensor-derived state, and every result (including the ones that *don't* work, like full rotor-out recovery) is reported as measured.
+- 🔬 **No hiding the failures** — the deployable stack uses only sensor-derived state, and every result (including the ones that *don't* work, like full rotor-out recovery) is reported as measured.
 
 > Numbers below come from the reproducible benchmark in [`docs/BENCHMARK.md`](docs/BENCHMARK.md). Known limitations and negative results are documented in [`docs/RESULTS.md`](docs/RESULTS.md).
 
@@ -127,7 +127,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 <details>
 <summary><b>Swarm (decentralized, separate module)</b></summary>
 
-- **No-cheats decentralized sensing** — coordination runs on per-drone noisy estimates + latency/dropout-limited neighbour broadcasts.
+- **decentralized sensing** — coordination runs on per-drone noisy estimates + latency/dropout-limited neighbour broadcasts.
 - **Distributed Kalman-Consensus** deck estimation; **non-bypassable CBF-QP safety filter** with a provable discrete-time separation certificate.
 - A **permutation-invariant GNN policy** that generalizes across swarm size; **Hungarian + auction** dynamic re-tasking across K moving decks.
 - **Cooperative perception** (V2VNet / Where2comm-style) with learned attention fusion that rejects confident outliers and value-of-information communication gating.
@@ -193,7 +193,7 @@ Full design notes: [`docs/SWARM.md`](docs/SWARM.md).
 
 ## Architecture
 
-The deployable stack flies on **onboard sensors only** — no privileged simulator state ever enters a control or coordination decision (the [no-cheats realism charter](docs/REALISM_CHARTER.md)).
+The deployable stack flies on **onboard sensors only** — no privileged simulator state ever enters a control or coordination decision (the [realism charter](docs/REALISM_CHARTER.md)).
 
 ```
 camera (ArUco grid + nested centre marker)  ─┐
@@ -213,7 +213,7 @@ A detailed component walkthrough — physics, perception, estimation, control, l
 
 | feature | what it adds |
 |---|---|
-| **A1** onboard sensing | no-cheats decentralized view (noisy estimates + comms range/latency/dropout) |
+| **A1** onboard sensing | decentralized view (noisy estimates + comms range/latency/dropout) |
 | **A2** consensus | distributed Kalman-Consensus deck estimation; blind drones recover from neighbours |
 | **A3** safety | non-bypassable CBF-QP filter + provable forward-invariance certificate; 0 separation violations |
 | **A4** GNN policy | permutation-invariant graph policy; one policy generalizes across swarm size |
@@ -253,7 +253,7 @@ docs/                       # results, architecture, swarm, safety, research not
 | [`docs/SWARM.md`](docs/SWARM.md) | swarm coordination, consensus, safety, GNN, cooperative perception |
 | [`docs/SAFETY.md`](docs/SAFETY.md) | reachability shield, CBF avoidance, contingency FSM |
 | [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) | method choices, literature, and debugging lessons |
-| [`docs/REALISM_CHARTER.md`](docs/REALISM_CHARTER.md) | the no-cheats simulation-fidelity rules |
+| [`docs/REALISM_CHARTER.md`](docs/REALISM_CHARTER.md) | the simulation-fidelity rules |
 | [`docs/PROGRESS_LOG.md`](docs/PROGRESS_LOG.md) | detailed checkpointed build history |
 
 ## Citing & license
