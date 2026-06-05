@@ -25,7 +25,7 @@
 
 ## Why this project
 
-Landing a multirotor on a **moving, oscillating platform** — a rover, a truck, or a ship deck pitching in a seaway — is one of the genuinely hard problems in field robotics: the target is non-stationary, the only state you have is what your own sensors can infer, wind and air-wake fight you, and you get one shot at touchdown. This repository is a **full, honest, research-grade attempt at the whole problem**, end to end:
+Landing a multirotor on a **moving, oscillating platform** — a rover, a truck, or a ship deck pitching in a seaway — is one of the genuinely hard problems in field robotics: the target is non-stationary, the only state you have is what your own sensors can infer, wind and air-wake fight you, and you get one shot at touchdown. This repository is a **full, research-grade attempt at the whole problem**, end to end:
 
 - 🎯 **A complete vision-to-thrust stack** — ArUco perception → relative-state Kalman filter → landing-supervisor FSM → choice of geometric / MPC / image-based / learned control → motor mixing → true contact touchdown.
 - 🌊 **Real maritime fidelity** — 6-DOF seakeeping ship decks driven by **JONSWAP / Pierson–Moskowitz wave spectra + RAOs**, plus a ship **air-wake (burble)** turbulence field, the dominant real shipboard-landing disturbance.
@@ -33,7 +33,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 - 🐝 **A decentralized multi-drone swarm** (separate module) — N drones recovering onto K moving decks with consensus estimation, a non-bypassable CBF safety filter, a permutation-invariant GNN policy, and cooperative perception.
 - 🔬 **No cheating, and no hiding the failures** — the deployable stack uses only sensor-derived state, and every result (including the ones that *don't* work, like full rotor-out recovery) is reported as measured.
 
-> **Honesty first.** Numbers below come from the reproducible benchmark in [`docs/BENCHMARK.md`](docs/BENCHMARK.md). Known limitations and negative results are documented in [`docs/RESULTS.md`](docs/RESULTS.md), not swept under the rug.
+> Numbers below come from the reproducible benchmark in [`docs/BENCHMARK.md`](docs/BENCHMARK.md). Known limitations and negative results are documented in [`docs/RESULTS.md`](docs/RESULTS.md).
 
 ## Table of contents
 
@@ -99,7 +99,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 <details>
 <summary><b>Learning</b></summary>
 
-- A **Gymnasium environment** trained on a *calibrated estimator-noise surrogate* (rendering is ~100× too slow for RL), then evaluated honestly on the full vision pipeline.
+- A **Gymnasium environment** trained on a *calibrated estimator-noise surrogate* (rendering is ~100× too slow for RL), then evaluated on the full vision pipeline.
 - **Residual PPO** perturbing the classical baseline (action = 0 → the proven controller) so RL only has to learn refinements — beats the 86% baseline at **94%** on the hard regime.
 - **Recurrent (LSTM) PPO** for the partial-observability POMDP — **96%**, edging the feedforward policy.
 - Three RL bugs (reward-suicide, sign error, vz-authority hover) were each caught only by *evaluating checkpoints*, never by reward curves — a documented lesson in [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md).
@@ -246,7 +246,7 @@ docs/                       # results, architecture, swarm, safety, research not
 
 | document | contents |
 |---|---|
-| [`docs/RESULTS.md`](docs/RESULTS.md) | consolidated, honest results and findings (incl. negative results) |
+| [`docs/RESULTS.md`](docs/RESULTS.md) | consolidated, results and findings (incl. negative results) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | full component walkthrough of the stack |
 | [`docs/CLI.md`](docs/CLI.md) | complete command-line reference (every subcommand, flag, and preset) |
 | [`docs/BENCHMARK.md`](docs/BENCHMARK.md) | reproducible controller × scenario × disturbance matrix |
