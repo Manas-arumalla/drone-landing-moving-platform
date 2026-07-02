@@ -7,7 +7,6 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MuJoCo](https://img.shields.io/badge/physics-MuJoCo%203.8-orange.svg)](https://mujoco.org/)
-[![Tests](https://img.shields.io/badge/tests-112%20passing-brightgreen.svg)](tests/)
 [![Code style: ruff](https://img.shields.io/badge/style-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 [![Status](https://img.shields.io/badge/status-research--grade-success.svg)](docs/RESULTS.md)
 
