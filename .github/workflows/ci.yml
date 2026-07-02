@@ -51,3 +51,18 @@ jobs:
         env:
           MUJOCO_GL: egl
         run: pytest -q
+
+  docker:
+    name: docker (build + test suite in image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t drone-landing .
+
+      - name: Run test suite inside the image
+        run: docker run --rm drone-landing

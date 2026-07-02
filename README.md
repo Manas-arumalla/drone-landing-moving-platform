@@ -164,6 +164,16 @@ drone watch ship             # live MuJoCo 3-D viewer
 
 > No install? Use `python -m drone_landing ...` with `PYTHONPATH=src`.
 
+### Docker (one-command reproduction)
+
+The image is built and its full test suite executed on every push by [CI](https://github.com/Manas-arumalla/drone-landing-moving-platform/actions/workflows/ci.yml). Rendering is software (OSMesa), so no GPU is needed:
+
+```bash
+docker build -t drone-landing .
+docker run --rm drone-landing                                  # run the test suite headless
+docker run --rm drone-landing drone run ground --episodes 2    # headless demo episodes
+```
+
 ## Command-line interface
 
 Two polished entry points: **`drone`** (single-drone) and **`swarm`** (multi-drone). `run`/`parallel` are headless metric evaluations; `watch` opens an interactive MuJoCo window. Run `drone list` / `drone info` / `swarm info` for the live capability summary.

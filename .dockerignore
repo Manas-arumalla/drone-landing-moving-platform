@@ -1,0 +1,13 @@
+.git
+.github
+.gitignore
+.gitattributes
+media
+**/__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+.mypy_cache
+Dockerfile
+.dockerignore
