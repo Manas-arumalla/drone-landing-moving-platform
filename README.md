@@ -74,6 +74,20 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 | Swarm multi-deck, a deck fouls mid-recovery | **100% recovered** via auction re-tasking vs **0%** static assignment |
 | Cooperative perception (blind drone recovers deck from neighbours) | **4.24 m → 0.34 m** estimate error |
 
+### Positioning against the published baseline
+
+Goldschmid & Ahmad, _Autonomous Robots_ 48(4) 2024 ([`10.1007/s10514-024-10162-8`](https://doi.org/10.1007/s10514-024-10162-8)) is the closest recent RL-landing baseline. Where we overlap and where we diverge:
+
+| dimension | Goldschmid & Ahmad (2024) | this repo |
+|---|---|---|
+| observations | state-based (Gaussian noise σ = {0.1 m pos, 0.25 m/s vel}) | **vision** (ArUco → EKF), full pipeline |
+| platform | rectilinear/figure-8 rail cart (0.2–1.6 m/s) | ground rover **and** 6-DOF seakeeping ship (JONSWAP/PM), OSV, inclined, USV, truck |
+| disturbances | not modeled | wind (default), ship air-wake, sensor bias/dropout |
+| real hardware | **yes** (Vicon rail) | no (sim only — the biggest gap on our side) |
+| sim success (comparable ground-cart scenarios) | RL 99% / cascaded-PI 100% (their own finding) | geometric 83–100%, residual-RL up to 100% on ground |
+
+Full analysis, honest limitations, and a suggested head-to-head reproduction path: [`docs/LITERATURE.md`](docs/LITERATURE.md).
+
 ## Technical highlights
 
 <details open>
@@ -253,6 +267,7 @@ docs/                       # results, architecture, swarm, safety, research not
 | [`docs/SWARM.md`](docs/SWARM.md) | swarm coordination, consensus, safety, GNN, cooperative perception |
 | [`docs/SAFETY.md`](docs/SAFETY.md) | reachability shield, CBF avoidance, contingency FSM |
 | [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) | method choices, literature, and debugging lessons |
+| [`docs/LITERATURE.md`](docs/LITERATURE.md) | positioning against the published baseline (Goldschmid & Ahmad 2024) |
 | [`docs/REALISM_CHARTER.md`](docs/REALISM_CHARTER.md) | the simulation-fidelity rules |
 | [`docs/PROGRESS_LOG.md`](docs/PROGRESS_LOG.md) | detailed checkpointed build history |
 
