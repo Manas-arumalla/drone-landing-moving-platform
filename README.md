@@ -4,6 +4,7 @@
 
 ### Vision-based autonomous quadrotor recovery onto moving ground & seakeeping ship decks — flying on **onboard sensors only**, no ground truth in the loop.
 
+[![CI](https://github.com/Manas-arumalla/drone-landing-moving-platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Manas-arumalla/drone-landing-moving-platform/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MuJoCo](https://img.shields.io/badge/physics-MuJoCo%203.8-orange.svg)](https://mujoco.org/)
