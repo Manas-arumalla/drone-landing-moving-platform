@@ -58,7 +58,11 @@ def jonswap(omega: np.ndarray, hs: float, tp: float, gamma: float = 3.3) -> np.n
 
 def spectral_moment(omega: np.ndarray, s: np.ndarray, n: int = 0) -> float:
     """n-th spectral moment m_n = integral omega^n S(omega) d(omega) (trapezoidal)."""
-    trapezoid = getattr(np, "trapezoid", np.trapz)   # numpy>=2 renamed trapz -> trapezoid
+    # numpy>=2 renamed trapz -> trapezoid AND removed the old name; guard both.
+    # Note: getattr(np, "trapezoid", np.trapz) is not safe -- Python evaluates the
+    # default eagerly, and np.trapz no longer exists on numpy>=2, so it raises before
+    # the getattr fallback can fire.
+    trapezoid = getattr(np, "trapezoid", None) or np.trapz
     return float(trapezoid(omega**n * s, omega))
 
 
