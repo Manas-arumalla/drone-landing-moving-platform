@@ -33,7 +33,7 @@ CAM_W = CAM_H = 480
 CAM_FOVY = 90.0
 
 SCENARIOS = ("ground", "ship", "offshore", "inclined", "usv", "truck")
-CONTROLLERS = ("geometric", "mpc", "ibvs", "rl")
+CONTROLLERS = ("geometric", "mpc", "ibvs", "rl", "minsnap")
 SEA_STATES = ("calm", "moderate", "rough")
 INCLINES = ("gentle", "moderate", "steep")
 # 6-DOF seakeeping worlds (wave-driven roll/pitch/heave): drive the ship world model
@@ -98,6 +98,7 @@ PRESETS: dict[str, SimSpec] = {
     "ground":           SimSpec("ground", "geometric"),
     "ground-mpc":       SimSpec("ground", "mpc"),
     "ground-ibvs":      SimSpec("ground", "ibvs"),
+    "ground-minsnap":   SimSpec("ground", "minsnap"),
     "ground-hard":      SimSpec("ground", "geometric", vmax=1.5, amax=0.8, jerk=2.0),
     "ship-calm":        SimSpec("ship", "geometric", sea="calm"),
     "ship":             SimSpec("ship", "geometric", sea="moderate"),
@@ -196,6 +197,7 @@ def build(spec: SimSpec):
     ap_cfg = AutopilotConfig(
         use_mpc=spec.controller == "mpc",
         use_ibvs=spec.controller == "ibvs",
+        use_minsnap=spec.controller == "minsnap",
         use_green_deck=spec.green_deck,
         rl_policy_path=rl_path,
         failed_rotor=spec.fail_rotor,

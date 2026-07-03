@@ -78,6 +78,14 @@ optical-flow velocity. Everything downstream consumes the EKF estimate, never th
   the acceleration bound, giving ~80× tighter station-keeping under steady wind.
 - **IBVS** (`control/ibvs.py`): image-based visual servoing on image-space position + optical-flow
   velocity, which removes the velocity-spike fly-offs.
+- **Flatness / minimum-snap planning** (`planning/minsnap.py`, `--controller minsnap`): the quadrotor
+  is differentially flat in (x, y, z, yaw), so a snap-minimizing polynomial from the current relative
+  state to a platform rendezvous gives a smooth reference whose acceleration doubles as attitude
+  feedforward (Mellinger & Kumar). Planned receding-horizon in the platform-relative frame, fed
+  through the same `a_xy_override` path as the MPC (drop-in comparable; supervisor commit logic
+  untouched). Boundary conditions are sanitized (low-passed + clipped velocity, clipped initial
+  accel): a planner bakes its boundary state into seconds of feedforward, so raw estimate spikes
+  destabilize it where the every-step-replanning MPC merely stumbles.
 - **Landing-supervisor FSM** (`planning/supervisor.py`): owns `APPROACH → DESCEND → COMMIT → SECURED /
   GO_AROUND`, the commit/press/cut logic, and — for ships — a **green-deck** strategy that perches and
   waits for a low-motion window, then performs a **heave-synchronized descent** fed by an onboard deck

@@ -54,7 +54,7 @@ multiplier.
 | flag | values / default | meaning |
 |---|---|---|
 | `--scenario` | `ground` `ship` `offshore` `inclined` `usv` `truck` | landing target |
-| `--controller` | `geometric` (default) `mpc` `ibvs` `rl` | control law |
+| `--controller` | `geometric` (default) `mpc` `ibvs` `rl` `minsnap` | control law; `minsnap` = flatness-based minimum-snap approach trajectory + acceleration feedforward (Mellinger & Kumar) |
 | `--sea` | `calm` `moderate` `rough` | sea state (seakeeping scenarios) |
 | `--incline` | `gentle` `moderate` `steep` | tilt level (`inclined` scenario) |
 | `--sea-model` | `sinusoid` (default) `spectral` | `spectral` = JONSWAP/PM spectrum + RAOs (B1) |
@@ -121,7 +121,7 @@ Runs each preset in its own process (`ProcessPoolExecutor`) and prints a combine
 
 | preset | configuration |
 |---|---|
-| `ground` / `ground-mpc` / `ground-ibvs` | ground rover with geometric / MPC / IBVS |
+| `ground` / `ground-mpc` / `ground-ibvs` / `ground-minsnap` | ground rover with geometric / MPC / IBVS / min-snap |
 | `ground-hard` | fast random rover (`vmax 1.5, amax 0.8, jerk 2.0`) — the stress regime |
 | `ship-calm` / `ship` / `ship-rough` | ship deck at calm / moderate / rough sea |
 | `ship-green` / `ship-rough-green` | + green-deck commit timing |

@@ -117,8 +117,34 @@ quick hacks). Findings and the resulting decisions:
   research-grade extension. Recent filings also use **local consensus propagation** to cut inter-UAV
   comms — aligns with our planned cooperative (consensus) deck estimate.
 
+## Differential flatness / minimum-snap (`--controller minsnap`)
+
+The quadrotor is **differentially flat** in (x, y, z, yaw): every state and input follows
+algebraically from the flat outputs and their derivatives — acceleration fixes the thrust vector
+(hence attitude), jerk fixes the body rates. **Mellinger & Kumar (ICRA 2011)** plan the flat outputs
+as polynomials minimizing the integral of squared **snap** (4th derivative), since snap maps to
+angular acceleration and thus actuator effort; the feedforward this yields leaves the feedback loop
+only the correction work. It is the canonical aerial-robotics planning method and the natural
+complement to the receding-horizon MPC already here — the two classic camps side by side.
+
+Implementation (`planning/minsnap.py`): one order-9 segment per axis, solved exactly via the KKT
+system of the equality-constrained QP in normalized time (numpy only); planned in the
+**platform-relative frame** (rendezvous at r = ṙ = 0) so deck motion is tracked implicitly;
+replanned receding-horizon every 0.5 s; time-stretched until the plan respects the accel budget.
+
+**Lesson learned (recorded honestly):** the first closed-loop attempt flew off 4/4 episodes. A
+planner *bakes its boundary conditions into seconds of feedforward* — raw optical-flow velocity
+spikes became rendezvous plans toward phantom targets, and seeding each replan's initial acceleration
+with "the last command" self-excited once a command saturated (command → boundary → more aggressive
+plan → saturation lock). The MPC never sees either failure mode: it re-reads the state and re-solves
+every 10 ms. Fix: **sanitize the plan's boundary conditions** (low-pass + clip the boundary velocity,
+tightly clip the boundary acceleration) while the tracking feedback still consumes the raw estimate —
+0% → 75%+ immediately. General principle: *the longer your commitment to a decision, the cleaner the
+state that decision may consume.*
+
 ## Sources
 
+- [Minimum Snap Trajectory Generation and Control for Quadrotors — Mellinger & Kumar (ICRA 2011)](https://ieeexplore.ieee.org/document/5980409)
 - [Visual Servoing Approach to Autonomous UAV Landing on a Moving Vehicle (MDPI Sensors 2022)](https://www.mdpi.com/1424-8220/22/17/6549)
 - [Robust visual servoing control for quadrotors landing on a moving target (ScienceDirect 2021)](https://www.sciencedirect.com/science/article/abs/pii/S0016003221000223)
 - [Autonomous ship-deck landing via feed-forward IBVS (ScienceDirect 2022)](https://www.sciencedirect.com/science/article/abs/pii/S1270963822005430)

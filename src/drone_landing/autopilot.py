@@ -32,6 +32,7 @@ class AutopilotConfig:
     hover_thrust: float = 3.37      # N per motor, used while searching (pre-init)
     use_mpc: bool = False           # use the predictive MPC for horizontal tracking (vs PD/integral)
     use_ibvs: bool = False          # use IBVS guidance (image position + optical-flow velocity)
+    use_minsnap: bool = False       # flatness-based minimum-snap approach trajectory + feedforward
     rl_policy_path: str | None = None  # trained residual-RL policy (.zip); horizontal residual on geometric
     rl_algo: str = "ppo"            # ppo | recurrent_ppo (matches the trained checkpoint)
     failed_rotor: int | None = None    # fault-tolerance demo: engage 3-rotor allocation for this rotor
@@ -74,12 +75,20 @@ class VisionLandingAutopilot:
         if self.cfg.use_mpc:
             from drone_landing.control.mpc import HorizontalMPC
             self.mpc = HorizontalMPC()
+        # Flatness-based minimum-snap approach planner (Mellinger & Kumar): plans the relative
+        # position to a rendezvous with the platform and supplies acceleration feedforward through
+        # the same a_xy_override path as the MPC (drop-in comparable; commit logic untouched).
+        self.minsnap = None
+        if self.cfg.use_minsnap:
+            from drone_landing.planning.minsnap import MinSnapTracker
+            self.minsnap = MinSnapTracker(control_dt=control_dt)
         # IBVS uses optical flow (robust velocity) instead of the EKF's differentiated velocity.
         # The MPC also consumes the flow velocity: its decisive predictive commands amplify the EKF's
-        # spiky differentiated velocity into fly-offs, so it needs the same clean relative-velocity term.
+        # spiky differentiated velocity into fly-offs, so it needs the same clean relative-velocity
+        # term — and so does the min-snap tracker (any predictive tracker does).
         self.ibvs = IBVSGuidance() if self.cfg.use_ibvs else None
         self.flow = (OpticalFlowVelocity(camera, FlowConfig(gyro_comp=0.0))
-                     if (self.cfg.use_ibvs or self.cfg.use_mpc) else None)
+                     if (self.cfg.use_ibvs or self.cfg.use_mpc or self.cfg.use_minsnap) else None)
         # Maritime green-deck predictor: estimates the deck heave from the relative-altitude signal
         self.deck = DeckMotionPredictor() if self.cfg.use_green_deck else None
         # Trained residual-RL policy (optional): horizontal residual on the geometric baseline, run on
@@ -150,6 +159,8 @@ class VisionLandingAutopilot:
         self.controller.failed_rotor = None   # re-engaged after fail_time each episode (fault demo)
         if self.mpc is not None:
             self.mpc.reset()
+        if self.minsnap is not None:
+            self.minsnap.reset()
         if self.deck is not None:
             self.deck.reset()
         if self.rl is not None:
@@ -339,6 +350,11 @@ class VisionLandingAutopilot:
                         # estimate supports the MPC. Feed the robust optical-flow velocity, not the EKF's.
                         v_xy = self.v_flow if self.flow is not None else self.ekf.rel_vel[:2]
                         a_xy_override = self.mpc.compute(self.ekf.rel_pos[:2], v_xy)
+                    elif self.minsnap is not None and tracked and pos_std < cfg.mpc_confident_std:
+                        # Flatness/min-snap tracker: same confidence gate and flow velocity as the MPC
+                        # (predictive trackers amplify a settling estimate into fly-offs otherwise).
+                        v_xy = self.v_flow if self.flow is not None else self.ekf.rel_vel[:2]
+                        a_xy_override = self.minsnap.compute(self.ekf.rel_pos[:2], v_xy)
                 # Maritime heave-synchronized descent: near the deck, add the deck's vertical velocity
                 # (nowcast) to the descent command so the drone *rides* the heave and closes at the
                 # gentle commanded relative rate — making the touchdown impact independent of the

@@ -29,7 +29,22 @@ the default. IBVS removes velocity-spike fly-offs by using image-space position 
 
 **Alternative-controller success (12-ep, no truth in loop), for reference — geometric is the default:**
 geometric **ground 88% / ship 92%**; IBVS **ground 58% / ship 83%**; MPC **ground ~67%** (estimation-
-limited, confidence-gated). IBVS smooths the velocity (no fly-off spikes).
+limited, confidence-gated); min-snap **ground 75% / ship 100%** (flatness planner — see below). IBVS
+smooths the velocity (no fly-off spikes).
+
+**Flatness / minimum-snap planner (`--controller minsnap`, Mellinger & Kumar).** A receding-horizon
+snap-optimal approach trajectory to the platform rendezvous, tracked with acceleration feedforward through
+the same `a_xy_override` path as the MPC (`planning/minsnap.py`; see RESEARCH_NOTES for the method and the
+boundary-sanitization lesson). **Seeded A/B (12 ep/cell, matched seeds, `scripts/eval_minsnap.py`):**
+**ship 100% (12/12) with the tightest touchdown accuracy of any controller (0.134 m)** vs geometric 91.7%
+(0.187 m) — on the smooth periodic deck the rendezvous plan + feedforward genuinely helps. **Ground 75%**
+vs geometric 91.7% (still well above MPC's 41.7%): the fast **random** rover breaks the planner's
+constant-velocity rendezvous assumption, and the reactive PD wins — the same estimation-vs-control story
+as the MPC finding. Smoothness (8 matched seeds, airborne phase, truth used for metrics only): **max tilt
+14% lower** (gentler attitude envelope) but **RMS jerk 22% higher** (the 0.5 s replan steps inject small
+acceleration discontinuities). Honest net: min-snap wins where its assumptions hold (smooth deck — it is
+now the best ship controller in the table), trails the reactive baseline on jerky targets, and its
+"smoothness" is a tilt-envelope win, not a jerk win. Geometric stays the default.
 
 **IBVS commit-descent fix (traced + resolved).** Diagnosis: IBVS *lands* the drone softly (reaches SECURED
 on the deck) but on the fast **random** rover it used to touch down ~0.44 m off-centre — just **outside the

@@ -36,9 +36,11 @@ CONTROLLERS = [
     ("ground / geometric", SimSpec("ground", "geometric")),
     ("ground / IBVS", SimSpec("ground", "ibvs")),
     ("ground / MPC", SimSpec("ground", "mpc")),
+    ("ground / min-snap", SimSpec("ground", "minsnap")),
     ("ground / RL residual", SimSpec("ground", "rl")),
     ("ship / geometric", SimSpec("ship", "geometric")),
     ("ship / IBVS", SimSpec("ship", "ibvs")),
+    ("ship / min-snap", SimSpec("ship", "minsnap")),
 ]
 
 DISTURB = [
