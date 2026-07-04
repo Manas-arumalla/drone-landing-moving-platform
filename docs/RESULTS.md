@@ -123,13 +123,18 @@ spectrum passed through response-amplitude operators; it reproduces the target s
 exactly and is calibrated to the validated deck-motion RMS (so the spectral model is a physically-correct
 drop-in, `--sea-model spectral`).
 
-**Update (current-code benchmark, post optical-flow EKF fusion) — the DOB's air-wake margin shrank.**
-Regenerating the matrix on the current code gives air-wake **92% → 50%**, and `--dob` now recovers only to
-**58%** (re-verified at a second seed: 42% → 50%) — roughly **+8 pts**, not the original **+36 pts**. The
-original recovery was measured before the downward optical-flow velocity was fused into the EKF; the
-interaction between the flow-corrected velocity estimate and the DOB's IMU-residual feedforward is noted
-as an **open question**, reported as measured rather than tuned away. The DOB's clearest standing win
-remains the tube/DOB-MPC station-keeping result below (~80× tighter tracking under steady wind).
+**Update (current-code benchmark, post optical-flow EKF fusion) — the DOB's air-wake margin shrank, and
+the cause is confirmed.** Regenerating the matrix on the current code gives air-wake **92% → 50%**, with
+`--dob` recovering only to **58%** (re-verified at a second seed: 42% → 50%) — roughly **+8 pts**, not the
+original **+36 pts**. A controlled A/B (flow sensor disabled via config, same seeds) **isolates the
+optical-flow EKF fusion as the cause**: with flow off, air-wake lands 58% and **+DOB recovers to 83%
+(+25 pts)** — the historically documented margin. The plausible mechanism (hypothesis, not verified): the
+DOB's IMU-residual *feedforward* and the flow-corrected velocity *feedback* both react to the same gust,
+uncoordinated, in exactly the zone where both are active — the burble is strongest just over the deck,
+inside the flow sensor's <2.5 m validity range. Both features remain independently valuable (the flow
+sensor for terminal velocity feedback, the DOB for wind rejection); their composition costs margin and is
+reported as measured. The DOB's clearest standing win remains the tube/DOB-MPC station-keeping result
+below (~80× tighter tracking under steady wind).
 
 ## 4. Formal safety (B2 — Hamilton–Jacobi reachability)
 
