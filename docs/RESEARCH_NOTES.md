@@ -142,6 +142,17 @@ tightly clip the boundary acceleration) while the tracking feedback still consum
 0% → 75%+ immediately. General principle: *the longer your commitment to a decision, the cleaner the
 state that decision may consume.*
 
+**Attitude-matched touchdown (the second flatness dividend).** Touchdown attitude is set by terminal
+acceleration, so a tilted deck can be met attitude-matched by shaping the final descent — the fix for
+the inclined-deck failure (a level press on a 12° slope catches one edge and never seats). The deck
+normal comes from the ArUco PnP **rotation** (the position fix's unused half,
+`perception.board_normal_world`), low-passed over grid detections. Second lesson, same family as the
+first: the tilt acceleration `g·tan θ` is a *real horizontal force* — holding it through the whole
+commit descent accelerated the vehicle down-slope and off the deck (12/12 `off_platform`). Applied
+only over the final ~15 cm it is a last-instant maneuver: 12° went **0% → 67%** (gentle 6°: 100%).
+At 18° the same down-slope drift, scaling with tan θ, still clears the deck every time — the honest
+limit of shape-then-press without leading the touchdown point up-slope.
+
 ## Sources
 
 - [Minimum Snap Trajectory Generation and Control for Quadrotors — Mellinger & Kumar (ICRA 2011)](https://ieeexplore.ieee.org/document/5980409)

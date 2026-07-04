@@ -112,6 +112,65 @@ class MinSnapTrackerTests(unittest.TestCase):
         self.assertIsNone(trk.plan)
 
 
+@unittest.skipUnless(importlib.util.find_spec("cv2"), "opencv not installed")
+class DeckNormalTests(unittest.TestCase):
+    """Deck-surface normal from the ArUco PnP rotation (attitude-matched touchdown, Phase 2)."""
+
+    def _camera(self):
+        from drone_landing.perception import CameraModel
+        return CameraModel(480, 480, 90.0)
+
+    def test_flat_deck_gives_vertical_normal(self):
+        from drone_landing.perception.aruco_detector import board_normal_world
+        n = board_normal_world(np.zeros(3), self._camera())
+        np.testing.assert_allclose(n, [0.0, 0.0, 1.0], atol=1e-9)
+
+    def test_tilted_board_recovers_tilt_angle(self):
+        from drone_landing.perception.aruco_detector import board_normal_world
+        tilt = np.deg2rad(12.0)
+        n = board_normal_world(np.array([tilt, 0.0, 0.0]), self._camera())
+        self.assertAlmostEqual(float(np.linalg.norm(n)), 1.0, places=9)
+        self.assertGreater(n[2], 0.0)                                  # upward by construction
+        self.assertAlmostEqual(float(np.degrees(np.arccos(n[2]))), 12.0, places=6)
+
+
+class PressNormalTests(unittest.TestCase):
+    """Attitude-matched press: press_normal=None must be byte-identical to the legacy level press."""
+
+    def _controller(self):
+        from drone_landing.control.geometric import GeometricController
+        return GeometricController(1.4, np.array([0.062, 0.038, 0.027]), control_dt=0.01)
+
+    def test_none_press_unchanged(self):
+        args = (np.array([0.05, -0.02, -0.02]), np.zeros(3), np.eye(3), np.zeros(3))
+        legacy = self._controller().compute(*args, press=True)
+        explicit = self._controller().compute(*args, press=True, press_normal=None)
+        np.testing.assert_array_equal(legacy, explicit)
+
+    def test_tilted_press_produces_valid_distinct_command(self):
+        args = (np.array([0.05, -0.02, -0.02]), np.zeros(3), np.eye(3), np.zeros(3))
+        tilt = np.deg2rad(12.0)
+        n = np.array([np.sin(tilt), 0.0, np.cos(tilt)])
+        level = self._controller().compute(*args, press=True)
+        tilted = self._controller().compute(*args, press=True, press_normal=n)
+        self.assertTrue(np.all(np.isfinite(tilted)) and np.all(tilted >= 0.0))
+        self.assertFalse(np.allclose(level, tilted))                   # it actually acts on the normal
+
+    def test_velocity_hold_pretilt_only_in_terminal_window(self):
+        # the pre-tilt is a last-instant maneuver: active inside the final 15 cm, inert above it
+        # (holding g*tan(tilt) through the whole commit descent would carry the drone off the deck)
+        tilt = np.deg2rad(12.0)
+        n = np.array([np.sin(tilt), 0.0, np.cos(tilt)])
+        high = (np.array([0.0, 0.0, -0.3]), np.zeros(3), np.eye(3), np.zeros(3))   # 0.3 m up
+        low = (np.array([0.0, 0.0, -0.1]), np.zeros(3), np.eye(3), np.zeros(3))    # 0.1 m up
+        base_high = self._controller().compute(*high, velocity_hold=True)
+        shaped_high = self._controller().compute(*high, velocity_hold=True, press_normal=n)
+        np.testing.assert_array_equal(base_high, shaped_high)          # inert above the window
+        base_low = self._controller().compute(*low, velocity_hold=True)
+        shaped_low = self._controller().compute(*low, velocity_hold=True, press_normal=n)
+        self.assertFalse(np.allclose(base_low, shaped_low))            # active inside it
+
+
 @unittest.skipUnless(importlib.util.find_spec("mujoco"), "mujoco not installed")
 class MinSnapWiringTests(unittest.TestCase):
     def test_autopilot_builds_and_steps(self):

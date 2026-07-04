@@ -85,7 +85,12 @@ optical-flow velocity. Everything downstream consumes the EKF estimate, never th
   through the same `a_xy_override` path as the MPC (drop-in comparable; supervisor commit logic
   untouched). Boundary conditions are sanitized (low-passed + clipped velocity, clipped initial
   accel): a planner bakes its boundary state into seconds of feedforward, so raw estimate spikes
-  destabilize it where the every-step-replanning MPC merely stumbles.
+  destabilize it where the every-step-replanning MPC merely stumbles. Its **attitude-matched
+  touchdown** uses the flatness fact that terminal acceleration sets touchdown attitude: the deck
+  normal is measured by the same ArUco `solvePnP` fix that supplies position
+  (`perception.board_normal_world`, low-passed over grid detections), and on a tilted deck the
+  commit descent pre-tilts toward the normal over the final ~15 cm while the press pushes along the
+  normal — unlocking the 12° inclined deck (0% → 67%).
 - **Landing-supervisor FSM** (`planning/supervisor.py`): owns `APPROACH → DESCEND → COMMIT → SECURED /
   GO_AROUND`, the commit/press/cut logic, and — for ships — a **green-deck** strategy that perches and
   waits for a low-motion window, then performs a **heave-synchronized descent** fed by an onboard deck

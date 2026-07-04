@@ -15,6 +15,7 @@ import numpy as np
 from drone_landing.control import GeometricController, IBVSGuidance
 from drone_landing.estimation import RelativeStateEKF, accel_world, quat_to_rotmat
 from drone_landing.perception import ArucoDetector, CameraModel
+from drone_landing.perception.aruco_detector import board_normal_world
 from drone_landing.perception.optical_flow import FlowConfig, OpticalFlowVelocity
 from drone_landing.planning import DeckMotionPredictor, LandingSupervisor
 
@@ -176,6 +177,7 @@ class VisionLandingAutopilot:
         self._last_thrust = self._hover_thrust
         self.prev_gray = None
         self.v_flow = np.zeros(2)   # latest optical-flow relative velocity (IBVS)
+        self.deck_normal = None     # low-passed deck-surface normal from the ArUco PnP rotation
         self.k = 0
         self.last_good_k = -10_000
         self.state = "SEARCH"
@@ -221,6 +223,16 @@ class VisionLandingAutopilot:
                 else:
                     if self.ekf.update_aruco(rel):
                         self.last_good_k = self.k
+                # Deck-surface normal from the SAME PnP fix (grid only — the single centre marker's
+                # rotation suffers the planar-pose ambiguity). Low-passed so it estimates the deck's
+                # MEAN normal (rejects seaway wobble); consumed by the attitude-matched touchdown.
+                if det.source == "grid":
+                    n_w = board_normal_world(det.rvec_cam, self.camera)
+                    if self.deck_normal is None:
+                        self.deck_normal = n_w
+                    else:
+                        n = self.deck_normal + 0.05 * (n_w - self.deck_normal)
+                        self.deck_normal = n / max(float(np.linalg.norm(n)), 1e-9)
                 # IBVS: robust relative velocity from the fiducial's optical flow (nadir gimbal ->
                 # identity frame, no gyro compensation), held between camera frames
                 if self.flow is not None and self.prev_gray is not None:
@@ -394,10 +406,19 @@ class VisionLandingAutopilot:
                 if self.shield is not None:
                     h_above = max(-float(self.ekf.rel_pos[2]), 0.0)
                     vz_des = max(vz_des, -self.shield.safe_descent_speed(h_above))
+                # Attitude-matched touchdown (flatness terminal shaping, minsnap only): if the
+                # measured mean deck normal is meaningfully tilted (> ~4 deg — inclined decks; a
+                # ship's LPF'd mean normal stays level), hand it to the terminal controller so the
+                # commit descent pre-tilts and the press pushes along the normal. Every other
+                # controller path passes None and is untouched.
+                press_normal = None
+                if (self.minsnap is not None and self.deck_normal is not None
+                        and float(self.deck_normal[2]) < np.cos(np.deg2rad(4.0))):
+                    press_normal = self.deck_normal
                 ctrl = self.controller.compute(self.ekf.rel_pos, rel_vel_ctrl, R_ahrs,
                                                sensors.gyro, vz_des=vz_des, press=cmd.press,
                                                velocity_hold=vhold, a_xy_override=a_xy_override,
-                                               dist_ff=dist_ff)
+                                               dist_ff=dist_ff, press_normal=press_normal)
         else:
             self.state = "SEARCH"
             ctrl = np.full(4, cfg.hover_thrust)

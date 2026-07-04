@@ -59,7 +59,8 @@ class GeometricController:
     def compute(self, rel_pos: np.ndarray, rel_vel: np.ndarray, R: np.ndarray, omega: np.ndarray,
                 vz_des: float = 0.0, press: bool = False, hold_level: bool = False,
                 velocity_hold: bool = False, a_xy_override: np.ndarray | None = None,
-                dist_ff: np.ndarray | None = None) -> np.ndarray:
+                dist_ff: np.ndarray | None = None,
+                press_normal: np.ndarray | None = None) -> np.ndarray:
         """Return four motor thrusts.
 
         ``rel_pos`` / ``rel_vel`` are platform-minus-drone (world); ``R`` is body->world attitude;
@@ -67,6 +68,11 @@ class GeometricController:
         ``press`` engages weight-on-gear touchdown (sub-weight collective, still tracking laterally).
         ``hold_level`` flies straight up/down at level attitude, ignoring the (untrusted) horizontal
         estimate — used to climb and re-acquire when vision is lost mid-flight.
+        ``press_normal`` (optional, unit world vector): attitude-matched touchdown on a tilted deck —
+        the flatness insight that touchdown attitude is set by terminal acceleration. During the
+        commit velocity-hold it adds the acceleration g·n_xy/n_z that tilts body-z toward the deck
+        normal, and during the press it pushes along the normal instead of straight-down-level, so
+        the feet meet the tilted surface together. ``None`` (every existing caller) is unchanged.
         """
         g = self.g
         if hold_level:
@@ -84,6 +90,14 @@ class GeometricController:
             # position frozen at the commit offset even when the marker has left the FOV, instead of
             # chasing a coasting/biased position estimate off the deck.
             a_xy = -g.kd_xy * ev_xy
+            if press_normal is not None and -float(rel_pos[2]) <= 0.15:
+                # attitude-matched touchdown: pre-tilt body-z toward the deck normal (terminal accel
+                # a = g·n_xy/n_z aligns the thrust vector with the normal) — but ONLY over the last
+                # ~15 cm. The tilt acceleration is a real horizontal force (g·tan 12° ≈ 2.1 m/s²);
+                # holding it through the whole commit descent accelerates the vehicle down-slope and
+                # carries it off the deck before contact, so the pre-tilt is a last-instant maneuver.
+                nz = max(float(press_normal[2]), 0.9)          # cap the tilt authority (~25 deg)
+                a_xy = a_xy + GRAVITY * np.asarray(press_normal[:2], dtype=float) / nz
         else:
             # integral of position error eliminates the PD lag when tracking an accelerating platform.
             # Leak bleeds a stale bias once the platform's acceleration changes; conditional integration
@@ -108,8 +122,17 @@ class GeometricController:
             # weight-on-gear: push straight down at sub-weight, LEVEL. Near the deck the close-range
             # vision is noisy; tracking it tilts the drone and lands it on one foot (bounce). Level
             # press contacts all four feet evenly; the drone coasts horizontally with the platform.
-            f_des = self.m * np.array([0.0, 0.0, g.press_collective * GRAVITY])
-            level = True
+            # With ``press_normal``: push along the DECK NORMAL at the same sub-weight collective and
+            # let the attitude loop align body-z with it — all feet meet a *tilted* surface together
+            # (a level press on a slope catches one edge and never seats: the inclined-deck failure).
+            if press_normal is not None:
+                n_hat = np.asarray(press_normal, dtype=float)
+                n_hat = n_hat / max(float(np.linalg.norm(n_hat)), 1e-9)
+                f_des = self.m * g.press_collective * GRAVITY * n_hat
+                level = False
+            else:
+                f_des = self.m * np.array([0.0, 0.0, g.press_collective * GRAVITY])
+                level = True
         else:
             drone_vz = -rel_vel[2]     # deck vertical velocity ~ 0 for ground
             a_z = g.kp_vz * (vz_des - drone_vz)

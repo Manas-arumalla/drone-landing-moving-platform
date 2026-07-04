@@ -54,7 +54,7 @@ multiplier.
 | flag | values / default | meaning |
 |---|---|---|
 | `--scenario` | `ground` `ship` `offshore` `inclined` `usv` `truck` | landing target |
-| `--controller` | `geometric` (default) `mpc` `ibvs` `rl` `minsnap` | control law; `minsnap` = flatness-based minimum-snap approach trajectory + acceleration feedforward (Mellinger & Kumar) |
+| `--controller` | `geometric` (default) `mpc` `ibvs` `rl` `minsnap` | control law; `minsnap` = flatness-based minimum-snap approach trajectory + acceleration feedforward (Mellinger & Kumar), incl. attitude-matched touchdown on inclined decks (12°: 0% → 67%) |
 | `--sea` | `calm` `moderate` `rough` | sea state (seakeeping scenarios) |
 | `--incline` | `gentle` `moderate` `steep` | tilt level (`inclined` scenario) |
 | `--sea-model` | `sinusoid` (default) `spectral` | `spectral` = JONSWAP/PM spectrum + RAOs (B1) |

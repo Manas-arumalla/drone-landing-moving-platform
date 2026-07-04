@@ -73,6 +73,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 | Swarm (3–8 drones, one moving deck, real MuJoCo physics) | **100% all-landed**, separation never violated |
 | Swarm multi-deck, a deck fouls mid-recovery | **100% recovered** via auction re-tasking vs **0%** static assignment |
 | Cooperative perception (blind drone recovers deck from neighbours) | **4.24 m → 0.34 m** estimate error |
+| Inclined deck 12° (level press never seats: 0%) | **67%** via flatness attitude-matched touchdown (`--controller minsnap`) |
 
 ### Positioning against the published baseline
 
@@ -106,7 +107,7 @@ Full analysis, honest limitations, and a suggested head-to-head reproduction pat
 - **Geometric SE(3)** controller (default) with leaky integral + conditional-integration anti-windup.
 - **Nonlinear MPC** (CasADi) and a **tube / DOB-MPC** variant that folds a disturbance estimate into the prediction model and tightens constraints — ~80× tighter station-keeping under steady wind.
 - **Image-based visual servoing (IBVS)** using image-space position + optical-flow velocity (removes velocity-spike fly-offs).
-- **Differential-flatness minimum-snap planning** (Mellinger & Kumar): a receding-horizon snap-optimal approach trajectory to the platform rendezvous, tracked with acceleration feedforward (`--controller minsnap`) — with boundary-condition sanitization so the planner stays stable on a noisy vision estimate.
+- **Differential-flatness minimum-snap planning** (Mellinger & Kumar): a receding-horizon snap-optimal approach trajectory to the platform rendezvous, tracked with acceleration feedforward (`--controller minsnap`) — with boundary-condition sanitization so the planner stays stable on a noisy vision estimate. Its **attitude-matched touchdown** (terminal acceleration shaping toward the ArUco-measured deck normal) unlocks the 12° inclined deck: **0% → 67%**.
 - A **landing-supervisor finite-state machine** (`APPROACH → DESCEND → COMMIT → SECURED / GO_AROUND`) owns the commit/press/cut logic and, for ships, a **green-deck heave-synchronized descent** driven by an onboard motion predictor.
 
 </details>

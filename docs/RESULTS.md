@@ -19,7 +19,7 @@ gathered as each capability was built. Demo GIFs (`python scripts/make_demo_gifs
 | ship deck, moderate sea | ~90% | 6-DOF seakeeping deck + green-deck heave-sync descent |
 | ship deck, rough sea | ~83% | geometric baseline |
 | hard regime (fast/random rover + wind) | **86% → 94%** | residual RL beats the classical baseline |
-| inclined deck — gentle ~6° / moderate ~12° (P4) | **100% / ~0%** | level-attitude press seats on a gentle slope, fails on a steeper one (motivates attitude-matched touchdown; pairs with `--shield`) |
+| inclined deck — gentle ~6° / moderate ~12° (P4) | **100% / ~0%** | level-attitude press seats on a gentle slope, fails on a steeper one — **resolved by the flatness attitude-matched touchdown: `--controller minsnap` lands 12° at 67%** (see the min-snap section) |
 | moving truck — smooth loop, 0.45 m/s (P4) | **~100%** | continuously *translating* target; drone rides the moving bed through descent |
 | USV — maneuvering + lively rocking (P4) | **~83%** | translates *and* rocks (8° roll, ~3 s) — the hardest new platform |
 
@@ -45,6 +45,24 @@ as the MPC finding. Smoothness (8 matched seeds, airborne phase, truth used for 
 acceleration discontinuities). Honest net: min-snap wins where its assumptions hold (smooth deck — it is
 now the best ship controller in the table), trails the reactive baseline on jerky targets, and its
 "smoothness" is a tilt-envelope win, not a jerk win. Geometric stays the default.
+
+**Attitude-matched touchdown (flatness terminal shaping) — the inclined-deck unlock.** Touchdown attitude
+is set by terminal acceleration (the flatness map), so a tilted deck can be met with matched attitude by
+shaping the last moments of the descent. The deck normal is a **real measurement**: the same ArUco
+`solvePnP` fix that supplies the position also supplies the board rotation
+(`perception.board_normal_world`), low-passed over grid detections into the deck's *mean* normal —
+no privileged state. When the mean normal is tilted >4° (inclined decks; a ship's low-passed normal stays
+level), the commit descent **pre-tilts toward the normal over the final ~15 cm** and the press pushes
+**along the normal** instead of straight-down-level, so all feet meet the slope together
+(`--controller minsnap` only; every other controller path passes `None` and is untouched).
+**Seeded results (12 ep/cell):** inclined **moderate 12°: 0% → 67%** (the benchmark's dead cell — the
+level press never seats there and times out 12/12); gentle 6°: **100%**; ship/ground unchanged (the
+shaping never engages on level decks). **Two honest findings along the way:** (1) holding the tilt
+acceleration `g·tan 12° ≈ 2.1 m/s²` through the *whole* commit descent carries the drone off the deck
+before contact (12/12 `off_platform`) — the pre-tilt must be a last-instant maneuver, hence the 15 cm
+window; (2) the remaining 12° failures (4/12) are down-slope drift during the tilt landing near the deck
+edge, and at **steep 18° the same drift, scaling with tan θ, still clears the deck every time (0%)** —
+the honest limit of shape-then-press without leading the touchdown point up-slope.
 
 **IBVS commit-descent fix (traced + resolved).** Diagnosis: IBVS *lands* the drone softly (reaches SECURED
 on the deck) but on the fast **random** rover it used to touch down ~0.44 m off-centre — just **outside the

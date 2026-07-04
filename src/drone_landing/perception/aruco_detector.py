@@ -35,6 +35,21 @@ class ArucoDetection:
     corners: list | None = None
 
 
+def board_normal_world(rvec_cam: np.ndarray, camera: CameraModel) -> np.ndarray:
+    """Deck-surface normal (unit, world frame, upward) from a PnP rotation.
+
+    The board's +z axis is its surface normal; ``rvec_cam`` (from :func:`cv2.solvePnP`) rotates
+    board → OpenCV-camera frame, and the stabilized nadir gimbal makes the camera frame identity to
+    the world. Grid-board detections give a well-conditioned orientation; the single centre marker's
+    rotation suffers the planar-pose ambiguity, so callers should use ``source == "grid"`` fixes.
+    This is a real measurement (the same solvePnP output the position fix already uses) — it lets the
+    terminal controller match a tilted deck's attitude without any privileged state.
+    """
+    R, _ = cv2.Rodrigues(np.asarray(rvec_cam, dtype=float))
+    n = camera.opencv_to_world(R[:, 2], np.eye(3))
+    return -n if n[2] < 0 else n
+
+
 class ArucoDetector:
     def __init__(self, camera: CameraModel, config: ArucoConfig | None = None):
         self.camera = camera
