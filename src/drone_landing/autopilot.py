@@ -224,14 +224,17 @@ class VisionLandingAutopilot:
                     if self.ekf.update_aruco(rel):
                         self.last_good_k = self.k
                 # Deck-surface normal from the SAME PnP fix (grid only — the single centre marker's
-                # rotation suffers the planar-pose ambiguity). Low-passed so it estimates the deck's
-                # MEAN normal (rejects seaway wobble); consumed by the attitude-matched touchdown.
+                # rotation suffers the planar-pose ambiguity). Low-passed SLOWLY (tau ~ 4 s at the
+                # ~33 Hz frame rate) so it estimates the deck's MEAN normal: the filter must average
+                # over a full wave period (~6 s), not follow it — a faster filter tracked the ship's
+                # roll and transiently crossed the tilt gate, wobbling the up-slope lead mid-approach.
+                # A static incline still converges within a few seconds of tracking.
                 if det.source == "grid":
                     n_w = board_normal_world(det.rvec_cam, self.camera)
                     if self.deck_normal is None:
                         self.deck_normal = n_w
                     else:
-                        n = self.deck_normal + 0.05 * (n_w - self.deck_normal)
+                        n = self.deck_normal + 0.0075 * (n_w - self.deck_normal)
                         self.deck_normal = n / max(float(np.linalg.norm(n)), 1e-9)
                 # IBVS: robust relative velocity from the fiducial's optical flow (nadir gimbal ->
                 # identity frame, no gyro compensation), held between camera frames
@@ -366,7 +369,20 @@ class VisionLandingAutopilot:
                         # Flatness/min-snap tracker: same confidence gate and flow velocity as the MPC
                         # (predictive trackers amplify a settling estimate into fly-offs otherwise).
                         v_xy = self.v_flow if self.flow is not None else self.ekf.rel_vel[:2]
-                        a_xy_override = self.minsnap.compute(self.ekf.rel_pos[:2], v_xy)
+                        # Up-slope lead on a tilted deck: rendezvous up-slope of centre so the
+                        # deterministic down-slope drift of the attitude-matched touchdown lands the
+                        # vehicle centred. r = platform − drone, so a positive offset along the
+                        # (downhill) n_xy places the DRONE up-slope. Capped below the supervisor's
+                        # align_radius (0.20 m) so the commit gate still fires; zero on level decks.
+                        target = None
+                        if (self.deck_normal is not None
+                                and float(self.deck_normal[2]) < np.cos(np.deg2rad(4.0))):
+                            n_xy = np.asarray(self.deck_normal[:2], dtype=float)
+                            n_norm = float(np.linalg.norm(n_xy))
+                            tilt_tan = n_norm / max(float(self.deck_normal[2]), 1e-6)
+                            target = min(0.15, tilt_tan) * n_xy / max(n_norm, 1e-9)
+                        a_xy_override = self.minsnap.compute(self.ekf.rel_pos[:2], v_xy,
+                                                             target_xy=target)
                 # Maritime heave-synchronized descent: near the deck, add the deck's vertical velocity
                 # (nowcast) to the descent command so the drone *rides* the heave and closes at the
                 # gentle commanded relative rate — making the touchdown impact independent of the

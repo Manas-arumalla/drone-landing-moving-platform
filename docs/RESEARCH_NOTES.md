@@ -150,8 +150,17 @@ normal comes from the ArUco PnP **rotation** (the position fix's unused half,
 first: the tilt acceleration `g·tan θ` is a *real horizontal force* — holding it through the whole
 commit descent accelerated the vehicle down-slope and off the deck (12/12 `off_platform`). Applied
 only over the final ~15 cm it is a last-instant maneuver: 12° went **0% → 67%** (gentle 6°: 100%).
-At 18° the same down-slope drift, scaling with tan θ, still clears the deck every time — the honest
-limit of shape-then-press without leading the touchdown point up-slope.
+At 18° the same down-slope drift, scaling with tan θ, dominates (8%).
+
+**Up-slope lead + a third estimation lesson.** The drift is deterministic, so the min-snap rendezvous
+is biased up-slope (capped under the supervisor's align gate). It buys *centering*, not rate — 12°
+touchdown accuracy 0.19 → 0.134 m with the rate unchanged — because the permissible lead is smaller
+than the 18° drift. The instructive failure: the deck-normal low-pass (τ ≈ 0.6 s) *followed* the
+ship's ~6 s roll rather than averaging it, transiently crossing the tilt gate and wobbling the lead
+mid-approach — ship min-snap dipped 100% → 83% until the filter was slowed to τ ≈ 4 s (roll
+attenuated to ~±1°, gate quiet, 100% restored; a static incline still converges in seconds). Rule of
+thumb alongside the boundary-sanitization lesson: *a filter feeding a slow, discrete decision must
+average over the disturbance period — a filter that merely lags it hands the decision an oscillator.*
 
 ## Sources
 

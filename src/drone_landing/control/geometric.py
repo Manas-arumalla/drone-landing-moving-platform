@@ -39,6 +39,11 @@ class GeometricGains:
     kd_xy_ro: float = 2.0
     a_xy_max_ro: float = 1.2   # cap the thrust-axis tilt so the spinning frame holds position
     press_collective: float = 0.85  # fraction of weight at touchdown: gentle settle, no bounce
+    # attitude-matched touchdown (press_normal): altitude window for the terminal pre-tilt. The tilt
+    # acceleration g*tan(theta) is a real horizontal force, so the window must be just long enough for
+    # the attitude loop (~0.25 s) — at the commit descent rate 0.18 m/s, 0.08 m ~ 0.45 s. Longer
+    # windows let the down-slope drift build and carry the vehicle off the deck.
+    press_tilt_window: float = 0.15  # m
 
 
 class GeometricController:
@@ -90,7 +95,7 @@ class GeometricController:
             # position frozen at the commit offset even when the marker has left the FOV, instead of
             # chasing a coasting/biased position estimate off the deck.
             a_xy = -g.kd_xy * ev_xy
-            if press_normal is not None and -float(rel_pos[2]) <= 0.15:
+            if press_normal is not None and -float(rel_pos[2]) <= g.press_tilt_window:
                 # attitude-matched touchdown: pre-tilt body-z toward the deck normal (terminal accel
                 # a = g·n_xy/n_z aligns the thrust vector with the normal) — but ONLY over the last
                 # ~15 cm. The tilt acceleration is a real horizontal force (g·tan 12° ≈ 2.1 m/s²);

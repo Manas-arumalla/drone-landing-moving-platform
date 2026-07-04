@@ -157,6 +157,7 @@ class MinSnapTracker:
         self._age = 0.0
         self._last_a = np.zeros(2)
         self._v_lpf = np.zeros(2)                                  # boundary-velocity low-pass state
+        self._target = np.zeros(2)                                 # terminal offset (default: deck centre)
 
     def _replan(self, r_xy: np.ndarray) -> None:
         c = self.cfg
@@ -167,7 +168,8 @@ class MinSnapTracker:
         a0 = np.clip(-self._last_a, -c.a_bound_max, c.a_bound_max)
         b0 = np.stack([r_xy, v0, a0, np.zeros(2)])
         bT = np.zeros((4, 2))                                      # rendezvous: r = ṙ = r̈ = r⃛ = 0
-        T = float(np.clip(np.linalg.norm(r_xy) / c.v_cruise, c.t_min, c.t_max))
+        bT[0] = self._target                                       # optional terminal offset (up-slope lead)
+        T = float(np.clip(np.linalg.norm(r_xy - self._target) / c.v_cruise, c.t_min, c.t_max))
         plan = MinSnapPlan(T, b0, bT)
         for _ in range(c.max_stretch):                             # stretch time until within budget
             if plan.peak_accel() <= 0.85 * c.a_max:
@@ -176,11 +178,19 @@ class MinSnapTracker:
             plan = MinSnapPlan(T, b0, bT)
         self.plan, self._age = plan, 0.0
 
-    def compute(self, r_xy: np.ndarray, vr_xy: np.ndarray) -> np.ndarray:
-        """Horizontal acceleration command [ax, ay] for the current relative estimate."""
+    def compute(self, r_xy: np.ndarray, vr_xy: np.ndarray,
+                target_xy: np.ndarray | None = None) -> np.ndarray:
+        """Horizontal acceleration command [ax, ay] for the current relative estimate.
+
+        ``target_xy`` (optional): rendezvous at this deck-relative offset instead of the centre —
+        e.g. an **up-slope lead** on an inclined deck, so the deterministic down-slope drift of the
+        attitude-matched touchdown carries the vehicle onto the pad instead of off it.
+        """
         c = self.cfg
         r_xy = np.asarray(r_xy, dtype=float)[:2]
         vr_xy = np.asarray(vr_xy, dtype=float)[:2]
+        self._target = (np.zeros(2) if target_xy is None
+                        else np.asarray(target_xy, dtype=float)[:2])
         alpha = min(1.0, self.dt / c.v_bound_tau)
         self._v_lpf = self._v_lpf + alpha * (vr_xy - self._v_lpf)
         if self.plan is not None:

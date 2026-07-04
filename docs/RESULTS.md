@@ -59,10 +59,23 @@ level), the commit descent **pre-tilts toward the normal over the final ~15 cm**
 level press never seats there and times out 12/12); gentle 6°: **100%**; ship/ground unchanged (the
 shaping never engages on level decks). **Two honest findings along the way:** (1) holding the tilt
 acceleration `g·tan 12° ≈ 2.1 m/s²` through the *whole* commit descent carries the drone off the deck
-before contact (12/12 `off_platform`) — the pre-tilt must be a last-instant maneuver, hence the 15 cm
-window; (2) the remaining 12° failures (4/12) are down-slope drift during the tilt landing near the deck
-edge, and at **steep 18° the same drift, scaling with tan θ, still clears the deck every time (0%)** —
-the honest limit of shape-then-press without leading the touchdown point up-slope.
+before contact (12/12 `off_platform`) — the pre-tilt must be a last-instant maneuver, hence the ~15 cm
+window (`GeometricGains.press_tilt_window`; a window sweep at 0.06/0.10/0.15 m confirmed the rate is
+insensitive — most of the drift accrues during the press itself); (2) the remaining 12° failures (4/12)
+are down-slope drift during the tilt, and at **steep 18° the drift, scaling with tan θ, dominates (8%)**.
+
+**Up-slope lead (the follow-up):** since the down-slope drift is deterministic, the min-snap tracker
+rendezvouses **up-slope of centre** on a tilted deck (`target_xy`, capped at 0.15 m — under the
+supervisor's 0.20 m align gate so commit still fires). Measured effect: the success **rate is unchanged**
+(12°: 67%, 18°: 8%) but **centering improves substantially** — 12° touchdown accuracy 0.19 → **0.134 m**,
+and the 18° success lands dead-centre (0.037 m). The 18° drift simply exceeds any lead the commit gate
+permits; that cell honestly needs a different touchdown strategy (e.g. hold-then-drop or contact-first
+attitude capture), not a bigger lead. **A third estimation lesson from this iteration:** the deck-normal
+low-pass initially had τ ≈ 0.6 s — it *followed* the ship's ~6 s roll instead of averaging it,
+transiently crossing the tilt gate and wobbling the lead mid-approach (ship min-snap dipped 100% → 83%).
+The filter that feeds a slow decision must average over the disturbance period, not track it: at τ ≈ 4 s
+the ±5° roll attenuates to ~±1°, the gate stays quiet on ships (100% restored), and a static incline
+still converges within seconds.
 
 **IBVS commit-descent fix (traced + resolved).** Diagnosis: IBVS *lands* the drone softly (reaches SECURED
 on the deck) but on the fast **random** rover it used to touch down ~0.44 m off-centre — just **outside the

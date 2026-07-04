@@ -111,6 +111,20 @@ class MinSnapTrackerTests(unittest.TestCase):
         trk.reset()
         self.assertIsNone(trk.plan)
 
+    def test_target_offset_rendezvous(self):
+        """With target_xy set (up-slope lead) the closed loop settles at the offset, not the centre."""
+        dt = 0.01
+        trk = MinSnapTracker(control_dt=dt)
+        target = np.array([0.15, 0.0])
+        r = np.array([1.5, -0.8])
+        v = np.zeros(2)
+        for _ in range(int(8.0 / dt)):
+            a = trk.compute(r, v, target_xy=target)
+            v = v - a * dt
+            r = r + v * dt
+        self.assertLess(float(np.linalg.norm(r - target)), 0.05)   # settled at the lead point
+        self.assertGreater(float(np.linalg.norm(r)), 0.09)         # NOT at the centre
+
 
 @unittest.skipUnless(importlib.util.find_spec("cv2"), "opencv not installed")
 class DeckNormalTests(unittest.TestCase):
