@@ -28,6 +28,7 @@ LANDING = [
     ("offshore OSV", SimSpec("offshore", "geometric", sea="moderate")),
     ("inclined / gentle 6deg", SimSpec("inclined", "geometric", incline="gentle")),
     ("inclined / moderate 12deg", SimSpec("inclined", "geometric", incline="moderate")),
+    ("inclined 12deg / min-snap (attitude-matched)", SimSpec("inclined", "minsnap", incline="moderate")),
     ("USV (maneuver + rock)", SimSpec("usv", "geometric")),
     ("moving truck", SimSpec("truck", "geometric")),
 ]

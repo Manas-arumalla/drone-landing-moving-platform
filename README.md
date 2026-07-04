@@ -67,7 +67,7 @@ Landing a multirotor on a **moving, oscillating platform** — a rover, a truck,
 |---|---|
 | Ground rover (cruising) / ship (moderate sea) | **~90% / ~92%** landing success, vision-only |
 | Hardest regime (fast random rover + wind) | classical **86%** → **residual PPO 94%** → **recurrent LSTM-PPO 96%** |
-| Ship air-wake (burble) disturbance | 86% → **58%** (air-wake on) → **83%** recovered with the disturbance observer (`--dob`) |
+| Ship air-wake (burble) disturbance | 92% → **50%** (air-wake on) → **58%** with the disturbance observer (`--dob`); the DOB's earlier +33-pt recovery shrank after the optical-flow EKF fusion — reported as measured, see [`docs/RESULTS.md`](docs/RESULTS.md) |
 | Tube / DOB-MPC station-keeping under wind | **~80× tighter** tracking vs plain MPC |
 | Formal-safety shield (reckless dive + random wind) | 100% hard impacts (5.25 m/s) → **8%** (0.40 m/s) under the HJ-reachability shield |
 | Swarm (3–8 drones, one moving deck, real MuJoCo physics) | **100% all-landed**, separation never violated |
@@ -185,7 +185,7 @@ Two polished entry points: **`drone`** (single-drone) and **`swarm`** (multi-dro
 ```bash
 drone run --scenario ground --controller mpc --episodes 20
 drone run ship --sea-model spectral      # JONSWAP/PM wave spectrum + RAOs
-drone run ship --airwake --dob           # ship air-wake + disturbance observer that recovers it
+drone run ship --airwake --dob           # ship air-wake stressor + disturbance-observer feedforward
 drone reachability                        # HJ safe-landing set + runtime-assurance shield
 drone safety                              # higher-order-CBF sense-and-avoid + contingency FSM
 drone run ship --cnn-markerless           # learned CNN deck detector fallback

@@ -102,13 +102,21 @@ bugs (reward-accumulation suicide, obs sign convention, vz-authority/hover) were
 | condition | baseline | with `--dob` | note |
 | --- | --- | --- | --- |
 | strong steady wind | 33% | **42%** | disturbance-observer feedforward, +9 pts |
-| ship **air-wake** (burble) over the deck | 86% → **50%** | **→ 86%** | DOB fully recovers the burble |
+| ship **air-wake** (burble) over the deck | 86% → **50%** | **→ 86%** | DOB fully recovered the burble *(measured before the optical-flow EKF fusion — see the update below)* |
 
 The air-wake (the dominant real shipboard-landing disturbance) is modeled as a position-dependent
 turbulence field strongest just over the deck. The wave model is a **JONSWAP / Pierson–Moskowitz**
 spectrum passed through response-amplitude operators; it reproduces the target significant height `Hs`
 exactly and is calibrated to the validated deck-motion RMS (so the spectral model is a physically-correct
-drop-in, `--sea-model spectral`). The DOB's air-wake recovery (50%→86%) is its strongest, most physical win.
+drop-in, `--sea-model spectral`).
+
+**Update (current-code benchmark, post optical-flow EKF fusion) — the DOB's air-wake margin shrank.**
+Regenerating the matrix on the current code gives air-wake **92% → 50%**, and `--dob` now recovers only to
+**58%** (re-verified at a second seed: 42% → 50%) — roughly **+8 pts**, not the original **+36 pts**. The
+original recovery was measured before the downward optical-flow velocity was fused into the EKF; the
+interaction between the flow-corrected velocity estimate and the DOB's IMU-residual feedforward is noted
+as an **open question**, reported as measured rather than tuned away. The DOB's clearest standing win
+remains the tube/DOB-MPC station-keeping result below (~80× tighter tracking under steady wind).
 
 ## 4. Formal safety (B2 — Hamilton–Jacobi reachability)
 
